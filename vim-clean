@@ -1,3 +1,0 @@
-for file in `find ./ | grep '~'`; do rm $file; done;
-for file in `find ./ | grep 'swo$'`; do rm $file; done;
-for file in `find ./ | grep 'swp$'`; do rm $file; done;
