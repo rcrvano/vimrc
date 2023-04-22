@@ -1,0 +1,113 @@
+#################################################
+# DO Community Playbooks: Docker
+#################################################
+---
+- hosts: all
+  become: true
+  vars:
+    create_containers: 1
+    default_container_name: docker
+    default_container_image: ubuntu
+    default_container_command: sleep 1d
+
+  tasks:
+
+    - name: Install aptitude using apt
+      apt: name=aptitude state=latest update_cache=yes force_apt_get=yes
+
+    - name: Install required system packages
+      apt: name={{ item }} state=latest update_cache=yes
+      loop: [ 'apt-transport-https', 'ca-certificates', 'curl', 'software-properties-common', 'python3-pip', 'virtualenv', 'python3-setuptools', 'htop', 'net-tools', 'git', 'gcc','g++','make','whois', 'fuse' ]
+
+#    - name: Enable universe repository
+#      command: sudo add-apt-repository universe
+
+    - name: Fix /etc/hosts
+      command: echo '127.0.0.1   localhost' > /etc/hosts
+
+
+
+
+    - name: Install nginx and certbot
+      apt: name={{ item }} state=latest update_cache=yes
+      loop: [ 'nginx', 'certbot', 'python3-certbot-nginx' ]
+
+
+
+
+    - name: Add nodejs apt key
+      apt_key:
+        url: https://deb.nodesource.com/gpgkey/nodesource.gpg.key
+        state: present
+
+    - name: Add nodejs repository
+      apt_repository:
+        repo: deb https://deb.nodesource.com/node_14.x {{ ansible_lsb.codename }} main
+        state: present
+        update_cache: yes
+
+    - name: Install nodejs
+      apt:
+        name: nodejs
+        state: present
+
+    - name: Install npm
+      apt:
+        name: npm
+        state: present
+
+
+
+    - name: Install nodejs packages
+      shell: "{{ item }}"
+      with_items:
+        - npm install yarn nodemon -g
+
+
+
+
+    - name: Add Docker GPG apt Key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker Repository
+      apt_repository:
+        repo: deb https://download.docker.com/linux/ubuntu hirsute stable
+        state: present
+
+    - name: Update apt and install docker-ce
+      apt: update_cache=yes name=docker-ce state=latest
+
+    - name: Update apt and install docker-compose
+      apt: update_cache=yes name=docker-compose state=latest
+
+
+
+
+    - name: Install vimrc. TODO! it's not working
+      shell: "{{ item }}"
+      with_items:
+        - wget https://raw.githubusercontent.com/rcrvano/vimrc/master/vimrc -O /root/.vimrc
+        - wget https://raw.githubusercontent.com/rcrvano/vimrc/master/vim-clean -O /usr/bin/vim-clean
+        - chmod +x /usr/bin/vim-clean
+
+    - name: Install NeoVim
+      shell: "{{ item }}"
+      with_items:
+       - wget https://github.com/neovim/neovim/releases/latest/download/nvim.appimage -O /usr/bin/nvim
+       - chmod +x /usr/bin/nvim
+
+    - name: Install LunarVim
+      shell: "{{ item }}"
+      with_items:
+        - wget https://raw.githubusercontent.com/lunarvim/lunarvim/master/utils/installer/install.sh -O /root/lvim_install.sh
+        - chmod +x /root/lvim_install.sh
+        - yarn add global tree-sister
+#        - echo '/root/lvim_install.sh'
+#			  - echo 'cp /root/.local/bin/lvim /usr/bin/lvim'
+#        - echo 'lvim.keys.normal_mode["<C-Tab>"] = ":b#<cr>"' >> /root/.config/lvim/config.lua
+#       - echo 'lvim.keys.normal_mode["<S-Tab>"] = ":b#<cr>"' >> /root/.config/lvim/config.lua
+
+    
+
